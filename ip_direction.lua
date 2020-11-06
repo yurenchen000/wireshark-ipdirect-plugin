@@ -11,6 +11,9 @@
 src_addr = Field.new("ip.src")
 dst_addr = Field.new("ip.dst")
 
+src_port = Field.new("tcp.srcport")
+dst_port = Field.new("tcp.dstport")
+
 src_arp = Field.new("arp.src.proto_ipv4")
 dst_arp = Field.new("arp.dst.proto_ipv4")
 
@@ -26,17 +29,21 @@ ip_direction_proto = Proto("ip.direction","TCP Direction Postdissector")
 remote_addr = ProtoField.string("ip.direction.remote","remote addr")
  	 direct = ProtoField.string("ip.direction.direct","direct")
 
+ local_port = ProtoField.string("ip.direction.local_pt", " local port")
+remote_port = ProtoField.string("ip.direction.remote_pt","remote port")
+
  local_hw_addr = ProtoField.string("ip.direction.local_hw", " local hw addr")
 remote_hw_addr = ProtoField.string("ip.direction.remote_hw","remote hw addr")
 
 -- add the field to the protocol
 -- assign protoField to dissector 
-ip_direction_proto.fields = {local_addr,remote_addr,direct, local_hw_addr,remote_hw_addr}
+ip_direction_proto.fields = {local_addr,remote_addr,direct, local_port,remote_port, local_hw_addr,remote_hw_addr}
 
 -- Add prefs
 local pref = ip_direction_proto.prefs
 pref.label_direct_in  = Pref.string ("label direct in ", "←", "label of in  package")
 pref.label_direct_out = Pref.string ("label direct out", "→", "label of out package")
+pref.label_my_mac = Pref.string ("label local mac", "", "label of local mac")
 
 -- local my_ip='192.168.1.111'
 --local my_ip='192.168.1.172'
@@ -44,13 +51,17 @@ pref.label_direct_out = Pref.string ("label direct out", "→", "label of out pa
 --local my_hw2='aa:bb:cc:dd:ee:ff'
 local my_ip='192.168.0.103'
 local my_hw='64:27:37:90:19:21'
-local my_hw2='b8:88:e3:e4:d4:f7'
+-- local my_hw2='b8:88:e3:e4:d4:f7'
+local my_hw2='84:90:00:02:03:df'
 
 -- create a function to "postdissect" each frame
 function ip_direction_proto.dissector(buffer,pinfo,tree)
 	-- obtain the current values the protocol fields
 	local src_addr_value = src_addr()
 	local dst_addr_value = dst_addr()
+
+	local src_port_val = src_port()
+	local dst_port_val = dst_port()
 
 	if src_addr_value == NULL then
 		src_addr_value = src_arp()
@@ -64,6 +75,10 @@ function ip_direction_proto.dissector(buffer,pinfo,tree)
 
 		src_addr_str = tostring(src_addr_value)
 		dst_addr_str = tostring(dst_addr_value)
+
+		src_port_str = tostring(src_port_val or '')
+		dst_port_str = tostring(dst_port_val or '')
+
 		local r_addr
 		local l_addr
 		local dir_value
@@ -102,6 +117,9 @@ function ip_direction_proto.dissector(buffer,pinfo,tree)
 			l_hw_addr = src_hw_str
 			r_hw_addr = dst_hw_str
 
+			l_port = src_port_str
+			r_port = dst_port_str
+
 			dir_value="-->"
 		else
 			l_addr=dst_addr_str
@@ -109,6 +127,9 @@ function ip_direction_proto.dissector(buffer,pinfo,tree)
 
 			l_hw_addr = dst_hw_str
 			r_hw_addr = src_hw_str
+
+			l_port = dst_port_str
+			r_port = src_port_str
 
 			-- dir_value=pref.label_direct_in
 			dir_value="<--"
@@ -119,6 +140,10 @@ function ip_direction_proto.dissector(buffer,pinfo,tree)
 		-- show result		
 		subtree:add( local_addr,l_addr)
 		subtree:add(remote_addr,r_addr)
+
+		subtree:add( local_port, l_port)
+		subtree:add(remote_port, r_port)
+
 		subtree:add(direct	   , dir_value)
 
 		subtree:add( local_hw_addr,l_hw_addr)
