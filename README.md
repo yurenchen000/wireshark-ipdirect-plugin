@@ -11,3 +11,10 @@
 - 使用方法:
 wireshark 报文解析(分组详情窗口) 会多出 `package direction` 的项, 其中子项 可以右键 `显示为列`.
 
+  - NOTE3: 其中右键 -> 协议首选项 -> open ..: 可以设置 `local mac` //插件通过 mac 区分报文 是收是发
+
+
+- 使用效果:
+主要为了提高包列表 的可读性
+
+![preview1.png](plugin_preview1.png)
