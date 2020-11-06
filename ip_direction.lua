@@ -17,6 +17,9 @@ dst_port = Field.new("tcp.dstport")
 src_arp = Field.new("arp.src.proto_ipv4")
 dst_arp = Field.new("arp.dst.proto_ipv4")
 
+src_udp = Field.new("udp.srcport")
+dst_udp = Field.new("udp.dstport")
+
 src_hw_addr = Field.new("eth.src")
 dst_hw_addr = Field.new("eth.dst")
 
@@ -52,7 +55,8 @@ pref.label_my_mac = Pref.string ("label local mac", "", "label of local mac")
 local my_ip='192.168.0.103'
 local my_hw='64:27:37:90:19:21'
 -- local my_hw2='b8:88:e3:e4:d4:f7'
-local my_hw2='84:90:00:02:03:df'
+--local my_hw2='84:90:00:02:03:df'
+local my_hw2='4c:1d:96:a0:c1:2f'
 
 -- create a function to "postdissect" each frame
 function ip_direction_proto.dissector(buffer,pinfo,tree)
@@ -67,6 +71,10 @@ function ip_direction_proto.dissector(buffer,pinfo,tree)
 		src_addr_value = src_arp()
 		dst_addr_value = dst_arp()
 	end
+	if srd_port_val == NULL then
+		src_port_val = src_udp()
+		dst_port_val = dst_udp()
+	end
 
 	local src_hw_str = tostring(src_hw_addr())
 	local dst_hw_str = tostring(dst_hw_addr())
@@ -77,7 +85,7 @@ function ip_direction_proto.dissector(buffer,pinfo,tree)
 		dst_addr_str = tostring(dst_addr_value)
 
 		src_port_str = tostring(src_port_val or '')
-		dst_port_str = tostring(dst_port_val or '')
+		dst_port_str = tostring(dst_port_val or 'dst port')
 
 		local r_addr
 		local l_addr
