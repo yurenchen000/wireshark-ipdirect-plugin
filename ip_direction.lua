@@ -1,0 +1,130 @@
+--
+-- ip.direction plugins
+--
+--    show Local,Remote,Direction columns 
+-- instead of SRC, DST
+-- 						written by yurenchen.com
+------------------------------------------------
+
+
+-- declare some Fields to be read
+src_addr = Field.new("ip.src")
+dst_addr = Field.new("ip.dst")
+
+src_arp = Field.new("arp.src.proto_ipv4")
+dst_arp = Field.new("arp.dst.proto_ipv4")
+
+src_hw_addr = Field.new("eth.src")
+dst_hw_addr = Field.new("eth.dst")
+
+-- declare our (pseudo) protocol
+ip_direction_proto = Proto("ip.direction","TCP Direction Postdissector")
+
+-- create the fields for our "protocol"
+-- create a protoField of a string value, (abbr, name, desc)
+ local_addr = ProtoField.string("ip.direction.local", " local addr")
+remote_addr = ProtoField.string("ip.direction.remote","remote addr")
+ 	 direct = ProtoField.string("ip.direction.direct","direct")
+
+ local_hw_addr = ProtoField.string("ip.direction.local_hw", " local hw addr")
+remote_hw_addr = ProtoField.string("ip.direction.remote_hw","remote hw addr")
+
+-- add the field to the protocol
+-- assign protoField to dissector 
+ip_direction_proto.fields = {local_addr,remote_addr,direct, local_hw_addr,remote_hw_addr}
+
+-- Add prefs
+local pref = ip_direction_proto.prefs
+pref.label_direct_in  = Pref.string ("label direct in ", "←", "label of in  package")
+pref.label_direct_out = Pref.string ("label direct out", "→", "label of out package")
+
+-- local my_ip='192.168.1.111'
+--local my_ip='192.168.1.172'
+--local my_hw='e0:06:e6:c9:16:33'
+--local my_hw2='aa:bb:cc:dd:ee:ff'
+local my_ip='192.168.0.103'
+local my_hw='64:27:37:90:19:21'
+local my_hw2='b8:88:e3:e4:d4:f7'
+
+-- create a function to "postdissect" each frame
+function ip_direction_proto.dissector(buffer,pinfo,tree)
+	-- obtain the current values the protocol fields
+	local src_addr_value = src_addr()
+	local dst_addr_value = dst_addr()
+
+	if src_addr_value == NULL then
+		src_addr_value = src_arp()
+		dst_addr_value = dst_arp()
+	end
+
+	local src_hw_str = tostring(src_hw_addr())
+	local dst_hw_str = tostring(dst_hw_addr())
+
+	if src_addr_value and dst_addr_value then
+
+		src_addr_str = tostring(src_addr_value)
+		dst_addr_str = tostring(dst_addr_value)
+		local r_addr
+		local l_addr
+		local dir_value
+
+		local local_flg
+
+		local r_hw_addr
+		local l_hw_addr
+		
+		-- recognize Local & Remote
+		-- if src_addr_str == my_ip then
+		-- 	local_flg=true
+		-- elseif dst_addr_str == my_ip then
+		-- 	local_flg=false
+		-- elseif string.find(src_addr_str, '^192%.168%.1%.') then
+		-- 	local_flg=true
+		-- elseif string.find(dst_addr_str, '^192%.168%.1%.') then
+		-- 	local_flg=false
+		-- elseif string.find(src_addr_str, '^192%.168%.') then
+		-- 	local_flg=true
+		-- elseif string.find(dst_addr_str, '^192%.168%.') then
+		-- 	local_flg=false
+		-- end
+
+		-- 使用 MAC 判断包 来源
+		if src_hw_str == my_hw or src_hw_str == my_hw2 then
+			local_flg=true
+		else
+			local_flg=false
+		end
+
+		if local_flg then
+			l_addr=src_addr_str
+			r_addr=dst_addr_str
+
+			l_hw_addr = src_hw_str
+			r_hw_addr = dst_hw_str
+
+			dir_value="-->"
+		else
+			l_addr=dst_addr_str
+			r_addr=src_addr_str
+
+			l_hw_addr = dst_hw_str
+			r_hw_addr = src_hw_str
+
+			-- dir_value=pref.label_direct_in
+			dir_value="<--"
+		end
+
+		local subtree = tree:add(ip_direction_proto,"package direction")
+
+		-- show result		
+		subtree:add( local_addr,l_addr)
+		subtree:add(remote_addr,r_addr)
+		subtree:add(direct	   , dir_value)
+
+		subtree:add( local_hw_addr,l_hw_addr)
+		subtree:add(remote_hw_addr,r_hw_addr)
+	end
+end
+
+-- register our protocol as a postdissector
+register_postdissector(ip_direction_proto)
