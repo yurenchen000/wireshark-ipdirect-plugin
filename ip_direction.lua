@@ -42,11 +42,30 @@ remote_hw_addr = ProtoField.string("ip.direction.remote_hw","remote hw addr")
 -- assign protoField to dissector 
 ip_direction_proto.fields = {local_addr,remote_addr,direct, local_port,remote_port, local_hw_addr,remote_hw_addr}
 
+-- save / load
+local cfg=Dir.personal_config_path('ip_dir_mac.txt')
+function read_conf(fpath)
+	local f=io.open(fpath,'r')
+	local s=''
+	if f then
+		s=f:read()
+	end
+	return s
+end
+function save_conf(fpath, text)
+	local f=io.open(fpath,'w')
+	if f then
+		f:write(text)
+	end
+end
+
+cfg_mac=read_conf(cfg)
+
 -- Add prefs
 local pref = ip_direction_proto.prefs
-pref.label_direct_in  = Pref.string ("label direct in ", "←", "label of in  package")
-pref.label_direct_out = Pref.string ("label direct out", "→", "label of out package")
-pref.label_my_mac = Pref.string ("label local mac", "", "label of local mac")
+pref.label_direct_in  = Pref.string ("direct in ", "←", "label of in  package")
+pref.label_direct_out = Pref.string ("direct out", "→", "label of out package")
+pref.label_my_mac = Pref.string ("local mac", cfg_mac, "label of local mac")
 
 -- local my_ip='192.168.1.111'
 --local my_ip='192.168.1.172'
@@ -56,10 +75,21 @@ local my_ip='192.168.0.103'
 local my_hw='64:27:37:90:19:21'
 -- local my_hw2='b8:88:e3:e4:d4:f7'
 --local my_hw2='84:90:00:02:03:df'
-local my_hw2='4c:1d:96:a0:c1:2f'
+--local my_hw2='4c:1d:96:a0:c1:2f'
+local my_hw2=tostring(pref.label_my_mac)
+
+
+function ip_direction_proto.prefs_changed()
+	my_hw2=tostring(pref.label_my_mac)
+	save_conf(cfg, my_hw2)
+end
 
 -- create a function to "postdissect" each frame
 function ip_direction_proto.dissector(buffer,pinfo,tree)
+
+	--print('my_mac2:', pref.label_my_mac)
+	--print('my_mac2:', ip_direction_proto.prefs.label_my_mac)
+
 	-- obtain the current values the protocol fields
 	local src_addr_value = src_addr()
 	local dst_addr_value = dst_addr()
@@ -71,7 +101,7 @@ function ip_direction_proto.dissector(buffer,pinfo,tree)
 		src_addr_value = src_arp()
 		dst_addr_value = dst_arp()
 	end
-	if srd_port_val == NULL then
+	if src_port_val == NULL then
 		src_port_val = src_udp()
 		dst_port_val = dst_udp()
 	end
@@ -85,7 +115,7 @@ function ip_direction_proto.dissector(buffer,pinfo,tree)
 		dst_addr_str = tostring(dst_addr_value)
 
 		src_port_str = tostring(src_port_val or '')
-		dst_port_str = tostring(dst_port_val or 'dst port')
+		dst_port_str = tostring(dst_port_val or '')
 
 		local r_addr
 		local l_addr
@@ -159,5 +189,9 @@ function ip_direction_proto.dissector(buffer,pinfo,tree)
 	end
 end
 
+--print('my_mac:', pref.label_my_mac)
+--print('my_mac:', ip_direction_proto.prefs.label_my_mac)
+
 -- register our protocol as a postdissector
 register_postdissector(ip_direction_proto)
+
