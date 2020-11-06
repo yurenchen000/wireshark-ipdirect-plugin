@@ -39,9 +39,11 @@ remote_port = ProtoField.string('ip.direction.r_port', 'remote port')
  local_hw_addr = ProtoField.string('ip.direction.local_hw', ' local hw')
 remote_hw_addr = ProtoField.string('ip.direction.remote_hw','remote hw')
 
+ 	 info = ProtoField.string('ip.direction.info', 'note')
+
 -- add the field to the protocol
 -- assign protoField to dissector 
-ip_direction_proto.fields = {local_addr, remote_addr, direct,  local_port, remote_port,  local_hw_addr, remote_hw_addr}
+ip_direction_proto.fields = {local_addr, remote_addr, direct,  local_port, remote_port,  local_hw_addr, remote_hw_addr,  info}
 
 -- Save/Load prefs
 function read_conf(fpath)
@@ -111,11 +113,15 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 	local dst_addr_value = pinfo.dst
 	--]]
 	
+	local info_value=''
 	-- if pinfo.cols.protocol == 'ICMP' then -- only show in display, lua get is const
-	if tostring(ip_proto()) == '1' then -- ICMP emun
+	if tostring(ip_proto()) == '1' then -- ICMP enum
 		src_port_val = pinfo.dst_port
 		dst_port_val = pinfo.src_port
 		pinfo.cols.info = tostring(pinfo.cols.info) .. ' //'.. tostring(pinfo.dst_port)
+	elseif tostring(ip_proto()) == '17' then -- UDP enum
+		--pinfo.cols.info = tostring(pinfo.cols.info) .. ' //'.. ' pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
+		info_value = '//pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
 	end
 
 	if src_addr_value and dst_addr_value then
@@ -190,6 +196,9 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 		--dir_value = dir_value .. '|' .. tostring(pinfo.cols.protocol) --ICMP
 		--dir_value = dir_value .. '|' .. tostring(ip_proto()) --ICMP
 		--dir_value = dir_value .. '|' .. tostring(pinfo.cols['info'])
+		--dir_value = dir_value .. '|' .. tostring(buffer)
+		--dir_value = dir_value .. '|' .. tostring(buffer:range(0x2a,10))
+		--dir_value = dir_value .. '|' .. ' pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
 
 		local subtree = tree:add(ip_direction_proto, 'package direction')
 
@@ -201,6 +210,7 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 		subtree:add(remote_port, r_port)
 
 		subtree:add( direct    , dir_value)
+		subtree:add( info      , info_value)
 
 		subtree:add( local_hw_addr, l_hw_addr)
 		subtree:add(remote_hw_addr, r_hw_addr)
