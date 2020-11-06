@@ -10,6 +10,7 @@
 -- declare some Fields to be read
 src_addr = Field.new('ip.src')
 dst_addr = Field.new('ip.dst')
+ip_proto = Field.new('ip.proto')
 
 src_port = Field.new('tcp.srcport')
 dst_port = Field.new('tcp.dstport')
@@ -80,24 +81,41 @@ function ip_direction_proto.prefs_changed()
 end
 
 -- create a function to 'postdissect' each frame
-function ip_direction_proto.dissector(buffer,pinfo,tree)
+function ip_direction_proto.dissector(buffer, pinfo, tree)
 	--print('my_mac2:', pref.my_mac)
 	--print('my_mac2:', ip_direction_proto.prefs.my_mac)
 
 	-- obtain the current values the protocol fields
+	--[[
 	local src_addr_value = src_addr()
 	local dst_addr_value = dst_addr()
-
-	local src_port_val = src_port()
-	local dst_port_val = dst_port()
 
 	if src_addr_value == NULL then
 		src_addr_value = src_arp()
 		dst_addr_value = dst_arp()
 	end
+	local src_port_val = src_port()
+	local dst_port_val = dst_port()
+
 	if src_port_val == NULL then
 		src_port_val = src_udp()
 		dst_port_val = dst_udp()
+	end
+	--]]
+
+	-- obtain values from pinfo
+	---[[
+	local src_port_val = pinfo.src_port
+	local dst_port_val = pinfo.dst_port
+	local src_addr_value = pinfo.src
+	local dst_addr_value = pinfo.dst
+	--]]
+	
+	-- if pinfo.cols.protocol == 'ICMP' then -- only show in display, lua get is const
+	if tostring(ip_proto()) == '1' then -- ICMP emun
+		src_port_val = pinfo.dst_port
+		dst_port_val = pinfo.src_port
+		pinfo.cols.info = tostring(pinfo.cols.info) .. ' //'.. tostring(pinfo.dst_port)
 	end
 
 	if src_addr_value and dst_addr_value then
@@ -165,6 +183,13 @@ function ip_direction_proto.dissector(buffer,pinfo,tree)
 			-- dir_value=pref.label_direct_in
 			dir_value='<--'
 		end
+
+		--dir_value = dir_value .. '|' .. tostring(pinfo.p2p_dir)
+		--dir_value = dir_value .. '|' .. tostring(pinfo.curr_proto)
+		--dir_value = dir_value .. '|' .. tostring(pinfo.cols['protocol']) --ICMP
+		--dir_value = dir_value .. '|' .. tostring(pinfo.cols.protocol) --ICMP
+		--dir_value = dir_value .. '|' .. tostring(ip_proto()) --ICMP
+		--dir_value = dir_value .. '|' .. tostring(pinfo.cols['info'])
 
 		local subtree = tree:add(ip_direction_proto, 'package direction')
 
