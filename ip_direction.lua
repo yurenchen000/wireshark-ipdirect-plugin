@@ -39,11 +39,11 @@ remote_port = ProtoField.string('ip.direction.r_port', 'remote port')
  local_hw_addr = ProtoField.string('ip.direction.local_hw', ' local hw')
 remote_hw_addr = ProtoField.string('ip.direction.remote_hw','remote hw')
 
- 	 info = ProtoField.string('ip.direction.info', 'note')
+ 	 note = ProtoField.string('ip.direction.note', 'note')
 
 -- add the field to the protocol
 -- assign protoField to dissector 
-ip_direction_proto.fields = {local_addr, remote_addr, direct,  local_port, remote_port,  local_hw_addr, remote_hw_addr,  info}
+ip_direction_proto.fields = {local_addr, remote_addr, direct,  local_port, remote_port,  local_hw_addr, remote_hw_addr,  note}
 
 -- Save/Load prefs
 function read_conf(fpath)
@@ -113,7 +113,7 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 	local dst_addr_value = pinfo.dst
 	--]]
 	
-	local info_value=''
+	local note_value=''
 	-- if pinfo.cols.protocol == 'ICMP' then -- only show in display, lua get is const
 	if tostring(ip_proto()) == '1' then -- ICMP enum
 		src_port_val = pinfo.dst_port
@@ -122,7 +122,7 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 	elseif tostring(ip_proto()) == '17' then -- UDP enum
 		if src_port_val ~= 53 and dst_port_val ~= 53 then -- not DNS
 			--pinfo.cols.info = tostring(pinfo.cols.info) .. ' //'.. ' pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
-			info_value = '//pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
+			note_value = '//pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
 		end
 	end
 
@@ -212,7 +212,7 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 		subtree:add(remote_port, r_port)
 
 		subtree:add( direct    , dir_value)
-		subtree:add( info      , info_value)
+		subtree:add( note      , note_value)
 
 		subtree:add( local_hw_addr, l_hw_addr)
 		subtree:add(remote_hw_addr, r_hw_addr)
