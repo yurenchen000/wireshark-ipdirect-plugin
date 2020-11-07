@@ -120,8 +120,10 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 		dst_port_val = pinfo.src_port
 		pinfo.cols.info = tostring(pinfo.cols.info) .. ' //'.. tostring(pinfo.dst_port)
 	elseif tostring(ip_proto()) == '17' then -- UDP enum
-		--pinfo.cols.info = tostring(pinfo.cols.info) .. ' //'.. ' pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
-		info_value = '//pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
+		if src_port_val ~= 53 and dst_port_val ~= 53 then -- not DNS
+			--pinfo.cols.info = tostring(pinfo.cols.info) .. ' //'.. ' pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
+			info_value = '//pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
+		end
 	end
 
 	if src_addr_value and dst_addr_value then
