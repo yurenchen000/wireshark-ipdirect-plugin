@@ -127,11 +127,11 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 	end
 
 	if src_addr_value and dst_addr_value then
-		local src_hw_str = tostring(src_hw_addr())
-		local dst_hw_str = tostring(dst_hw_addr())
+		local src_hw_str = tostring(src_hw_addr() or '')
+		local dst_hw_str = tostring(dst_hw_addr() or '')
 
-		src_addr_str = tostring(src_addr_value)
-		dst_addr_str = tostring(dst_addr_value)
+		src_addr_str = tostring(src_addr_value or '')
+		dst_addr_str = tostring(dst_addr_value or '')
 
 		src_port_str = tostring(src_port_val or '')
 		dst_port_str = tostring(dst_port_val or '')
