@@ -69,16 +69,19 @@ local cfg_mac = read_conf(cfg)
 
 -- Add prefs
 local pref = ip_direction_proto.prefs
-pref.label_direct_in  = Pref.string ('direct in ', '←', 'label of in  package')
-pref.label_direct_out = Pref.string ('direct out', '→', 'label of out package')
-pref.my_mac = Pref.string ('local mac', cfg_mac, 'local mac')
+-- pref.label_direct_in  = Pref.string ('direct in ', '←', 'label of in  package')
+-- pref.label_direct_out = Pref.string ('direct out', '→', 'label of out package')
+pref.my_mac = Pref.string ('Local MAC/IP', cfg_mac, 'local mac (or ip)')
 
-local my_ip ='192.168.0.103'
-local my_hw = '64:27:37:90:19:21'
+-- local my_ip ='192.168.0.103'
+-- local my_ip ='172.20.1.222'
+-- local my_hw = '64:27:37:90:19:21'
 local my_hw2 = tostring(pref.my_mac)
+local is_mac = my_hw2:sub(3,3) == ':'
 
 function ip_direction_proto.prefs_changed()
 	my_hw2 = tostring(pref.my_mac)
+	is_mac = my_hw2:sub(3,3) == ':'
 	save_conf(cfg, my_hw2)
 end
 
@@ -142,32 +145,25 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 		local l_addr
 		local dir_value
 
-		local local_flg
+		local local_flg = false
 
 		local r_hw_addr
 		local l_hw_addr
-		
-		-- recognize Local & Remote
-		-- if src_addr_str == my_ip then
-		-- 	local_flg=true
-		-- elseif dst_addr_str == my_ip then
-		-- 	local_flg=false
-		-- elseif string.find(src_addr_str, '^192%.168%.1%.') then
-		-- 	local_flg=true
-		-- elseif string.find(dst_addr_str, '^192%.168%.1%.') then
-		-- 	local_flg=false
-		-- elseif string.find(src_addr_str, '^192%.168%.') then
-		-- 	local_flg=true
-		-- elseif string.find(dst_addr_str, '^192%.168%.') then
-		-- 	local_flg=false
-		-- end
 
-		-- 使用 MAC 判断包 来源
-		if src_hw_str == my_hw or src_hw_str == my_hw2 then
-			local_flg = true
+		-- recognize Local & Remote
+
+		if is_mac then
+			-- 使用 MAC 判断包 来源
+			if src_hw_str == my_hw2 then
+				local_flg = true
+			end
 		else
-			local_flg = false
+			-- 使用 IP 判断包 来源
+			if src_addr_str == my_hw2 then
+				local_flg = true
+			end
 		end
+
 
 		if local_flg then
 			l_addr = src_addr_str
