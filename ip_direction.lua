@@ -164,6 +164,12 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 			end
 		end
 
+		if not local_flg then
+			if src_addr_str == dst_addr_str then
+				local_flg = src_port_str > dst_port_str
+			end
+		end
+
 
 		if local_flg then
 			l_addr = src_addr_str
