@@ -115,9 +115,9 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 
 	-- detect frame cap: linux cooked OR normal ethernet
 	local cap_type_val = tostring(cap_type())
-	local d_offset = 0
+	local d_offset = 42
 	if cap_type_val == '25' then -- 25=linux cooked captrue, 1=ethernet
-		d_offset = 2
+		d_offset = 44
 	end
 
 	-- obtain values from pinfo
@@ -139,7 +139,7 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 			and dst_port_val ~= 1900 -- not SSDP
 			then 
 			--pinfo.cols.info = tostring(pinfo.cols.info) .. ' //'.. ' pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
-			note_value = '//pkt:'..tostring(buffer:range(0x2a+d_offset,1)) .. ' cmd:'..tostring(buffer:range(0x2e+d_offset,2))
+			note_value = '//pkt:'..tostring(buffer:range(d_offset, 1)) .. ' cmd:'..tostring(buffer:range(d_offset+4, 2))
 		end
 	end
 
