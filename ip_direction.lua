@@ -24,6 +24,8 @@ dst_udp = Field.new('udp.dstport')
 src_hw_addr = Field.new('eth.src')
 dst_hw_addr = Field.new('eth.dst')
 
+cap_type = Field.new('frame.encap_type')
+
 -- declare our (pseudo) protocol
 ip_direction_proto = Proto('ip.direction', 'TCP Direction Postdissector')
 
@@ -85,6 +87,9 @@ function ip_direction_proto.prefs_changed()
 	save_conf(cfg, my_hw2)
 end
 
+print('ip_direction loaded: ', os.date('%F %T'))
+
+
 -- create a function to 'postdissect' each frame
 function ip_direction_proto.dissector(buffer, pinfo, tree)
 	--print('my_mac2:', pref.my_mac)
@@ -108,6 +113,13 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 	end
 	--]]
 
+	-- detect frame cap: linux cooked OR normal ethernet
+	local cap_type_val = tostring(cap_type())
+	local d_offset = 0
+	if cap_type_val == '25' then -- 25=linux cooked captrue, 1=ethernet
+		d_offset = 2
+	end
+
 	-- obtain values from pinfo
 	---[[
 	local src_port_val = pinfo.src_port
@@ -127,7 +139,7 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 			and dst_port_val ~= 1900 -- not SSDP
 			then 
 			--pinfo.cols.info = tostring(pinfo.cols.info) .. ' //'.. ' pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
-			note_value = '//pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
+			note_value = '//pkt:'..tostring(buffer:range(0x2a+d_offset,1)) .. ' cmd:'..tostring(buffer:range(0x2e+d_offset,2))
 		end
 	end
 
