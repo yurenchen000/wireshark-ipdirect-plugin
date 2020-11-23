@@ -115,9 +115,13 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 
 	-- detect frame cap: linux cooked OR normal ethernet
 	local cap_type_val = tostring(cap_type())
-	local d_offset = 42
+	local d_offset = 0
 	if cap_type_val == '25' then -- 25=linux cooked captrue, 1=ethernet
 		d_offset = 44
+	elseif cap_type_val == '1' then -- ethernet
+		d_offset = 42
+	else -- unknown: 155=wirshark pdu (etc. logcat)
+		return
 	end
 
 	-- obtain values from pinfo
