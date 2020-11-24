@@ -131,20 +131,23 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 	local src_addr_value = pinfo.src
 	local dst_addr_value = pinfo.dst
 	--]]
-	
-	local note_value=''
+
+	local note_value = ''
+	local ip_proto_val = tostring(ip_proto() or '')
 	-- if pinfo.cols.protocol == 'ICMP' then -- only show in display, lua get is const
-	if tostring(ip_proto()) == '1' then -- ICMP enum
+	if ip_proto_val == '1' then -- ICMP enum
 		src_port_val = pinfo.dst_port
 		dst_port_val = pinfo.src_port
 		pinfo.cols.info = tostring(pinfo.cols.info) .. ' //'.. tostring(pinfo.dst_port)
-	elseif tostring(ip_proto()) == '17' then -- UDP enum
+	elseif ip_proto_val == '17' then -- UDP enum
 		if src_port_val ~= 53 and dst_port_val ~= 53 -- not DNS
 			and dst_port_val ~= 1900 -- not SSDP
 			then 
 			--pinfo.cols.info = tostring(pinfo.cols.info) .. ' //'.. ' pkt:'..tostring(buffer:range(0x2a,1)) .. ' cmd:'..tostring(buffer:range(0x2e,2))
 			note_value = '//pkt:'..tostring(buffer:range(d_offset, 1)) .. ' cmd:'..tostring(buffer:range(d_offset+4, 2))
 		end
+	else
+		-- return -- unknown, ARP (show mac) or something else
 	end
 
 	if src_addr_value and dst_addr_value then
