@@ -18,3 +18,9 @@ wireshark 报文解析(分组详情窗口) 会多出 `package direction` 的项,
 主要为了提高包列表 的可读性
 
 ![preview1.png](plugin_preview1.png)
+
+
+color rules highlight for recv:
+
+    ip.direction.direct == "<--"
+
