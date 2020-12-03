@@ -24,3 +24,11 @@ color rules highlight for recv:
 
     ip.direction.direct == "<--"
 
+## profile
+预前配置好的 columns, layout, color rules (直接导入 可避免手动在 GUI 里再配置一遍)
+
+用法:
+
+    cp -pvrT profile_chen ~/.config/wireshark/profiles/chen
+
+// win 系统 参见 NOTE1, 找 configuration 目录
