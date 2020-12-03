@@ -1,0 +1,19 @@
+"no vpn 2" not openvpn and not ssdp
+"Non-HTTP and non-SMTP to/from 192.0.2.1" ip.addr == 192.0.2.1 and not tcp.port in {80 25}
+"No ARP and no DNS" not arp and !(udp.port == 53)
+"HTTP" http
+"TCP or UDP port is 80 (HTTP)" tcp.port == 80 || udp.port == 80
+"Non-DNS" !(udp.port == 53 || tcp.port == 53)
+"UDP only" udp
+"TCP only" tcp
+"IPX only" ipx
+"IPv6 address 2001:db8::1" ipv6.addr == 2001:db8::1
+"IPv6 only" ipv6
+"IPv4 address isn't 192.0.2.1 (don't use != for this!)" !(ip.addr == 192.0.2.1)
+"IPv4 address 192.0.2.1" ip.addr == 192.0.2.1
+"IPv4 only" ip
+"No ARP" not arp
+"Ethernet broadcast" eth.addr == ff:ff:ff:ff:ff:ff
+"Ethernet type 0x0806 (ARP)" eth.type == 0x0806
+"Ethernet address 00:00:5e:00:53:00" eth.addr == 00:00:5e:00:53:00
+"no vpn" ip.src != 222.129.36.22 and ip.dst != 222.129.36.22
