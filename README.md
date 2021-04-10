@@ -25,8 +25,11 @@ color rules highlight for recv:
     ip.direction.direct == "<--"
 
 ## udp_plug.lua
-新加的一个 侵入式的 解析器.
-方便逐字节检视报文, 字段能够对应 hex 视图.
+新加的一个 侵入式的 解析器.  
+方便逐字节检视报文, 字段能够对应 hex 视图.  
+
+并且内置各种常用类型 uint16, uint32, ipv4, string, timestamp; 开发起来非常便捷.
+
 
 ![udp_plug_preview1.png](udp_plug_preview1.png)
 
