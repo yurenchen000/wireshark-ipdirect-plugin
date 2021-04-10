@@ -24,6 +24,31 @@ color rules highlight for recv:
 
     ip.direction.direct == "<--"
 
+## udp_plug.lua
+新加的一个 侵入式的 解析器.
+方便逐字节检视报文, 字段能够对应 hex 视图.
+
+![udp_plug_preview1.png](udp_plug_preview1.png)
+
+## display filter
+
+▼基本操作
+
+ `==` `!=`
+
+▼字符串包含
+
+ .note `contains` "pkt:11"
+
+▼字节流比较  
+
+ .cmd == 0700  
+ .cmd[1] == 00  
+ .cmd[0:2] == 0700
+
+ref:  
+https://www.wireshark.org/docs/man-pages/wireshark-filter.html#The-slice-operator
+
 ## profile
 预前配置好的 columns, layout, color rules (直接导入 可避免手动在 GUI 里再配置一遍)
 
