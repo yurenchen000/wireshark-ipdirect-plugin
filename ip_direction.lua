@@ -209,25 +209,15 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 
 
 		if local_flg then
-			l_addr = src_addr_str
-			r_addr = dst_addr_str
-
-			l_hw_addr = src_hw_str
-			r_hw_addr = dst_hw_str
-
-			l_port = src_port_str
-			r_port = dst_port_str
+			l_addr   , r_addr     = src_addr_str, dst_addr_str
+			l_hw_addr, r_hw_addr  = src_hw_str  , dst_hw_str
+			l_port   , r_port     = src_port_str, dst_port_str
 
 			dir_value='-->'
 		else
-			l_addr = dst_addr_str
-			r_addr = src_addr_str
-
-			l_hw_addr = dst_hw_str
-			r_hw_addr = src_hw_str
-
-			l_port = dst_port_str
-			r_port = src_port_str
+			l_addr   , r_addr     = dst_addr_str, src_addr_str
+			l_hw_addr, r_hw_addr  = dst_hw_str  , src_hw_str
+			l_port   , r_port     = dst_port_str, src_port_str
 
 			-- dir_value=pref.label_direct_in
 			dir_value='<--'
