@@ -1,5 +1,5 @@
 --
--- ip.direction plugins
+-- ip_direction plugins
 --
 --    show Local,Remote,Direction columns 
 -- instead of SRC, DST
@@ -26,22 +26,22 @@ dst_hw_addr = Field.new('eth.dst')
 
 cap_type = Field.new('frame.encap_type')
 
--- declare our (pseudo) protocol
-ip_direction_proto = Proto('ip.direction', 'TCP Direction Postdissector')
+-- declare our (pseudo) protocol  // proto name should not contains '.'
+ip_direction_proto = Proto('ip_direction', 'TCP Direction Postdissector')
 
 -- create the fields for our 'protocol'
 -- create a protoField of a string value, (abbr, name, desc)
- local_addr = ProtoField.string('ip.direction.local',  ' local addr')
-remote_addr = ProtoField.string('ip.direction.remote', 'remote addr')
- 	 direct = ProtoField.string('ip.direction.direct', 'direct')
+ local_addr = ProtoField.string('ip_direction.local',  ' local addr')
+remote_addr = ProtoField.string('ip_direction.remote', 'remote addr')
+ 	 direct = ProtoField.string('ip_direction.direct', 'direct')
 
- local_port = ProtoField.string('ip.direction.l_port', ' local port')
-remote_port = ProtoField.string('ip.direction.r_port', 'remote port')
+ local_port = ProtoField.string('ip_direction.l_port', ' local port')
+remote_port = ProtoField.string('ip_direction.r_port', 'remote port')
 
- local_hw_addr = ProtoField.string('ip.direction.local_hw', ' local hw')
-remote_hw_addr = ProtoField.string('ip.direction.remote_hw','remote hw')
+ local_hw_addr = ProtoField.string('ip_direction.local_hw', ' local hw')
+remote_hw_addr = ProtoField.string('ip_direction.remote_hw','remote hw')
 
- 	 note = ProtoField.string('ip.direction.note', 'note')
+ 	 note = ProtoField.string('ip_direction.note', 'note')
 
 -- add the field to the protocol
 -- assign protoField to dissector 
@@ -65,26 +65,78 @@ function save_conf(fpath, text)
 	end
 end
 
-local cfg = Dir.personal_config_path('ip_dir_mac.txt')
-local cfg_mac = read_conf(cfg)
+function string:split(sep)
+   local sep, fields = sep or ":", {}
+   local pattern = string.format("([^%s]+)", sep)
+   self:gsub(pattern, function(c) fields[#fields+1] = c end)
+   return fields
+end
+function string:is_mac()
+	return self:sub(3,3) == ':'
+end
 
+
+local cfg = Dir.personal_config_path('ip_dir_mac.txt')
+-- local cfg_mac = read_conf(cfg)
+print('cfg:', cfg)
+-- mac_arr = cfg_mac:split('\r\n')
+-- print('arr:', table.concat(mac_arr,' '))
 
 -- Add prefs
 local pref = ip_direction_proto.prefs
 -- pref.label_direct_in  = Pref.string ('direct in ', '←', 'label of in  package')
 -- pref.label_direct_out = Pref.string ('direct out', '→', 'label of out package')
-pref.my_mac = Pref.string ('Local MAC/IP', cfg_mac, 'local mac (or ip)')
+-- pref.my_mac = Pref.string ('Local MAC/IP', cfg_mac, 'local mac (or ip)')
+
+-- pref.addr1 = Pref.string ('1 ', cfg_mac, 'local mac (or ip)')
+-- pref.addr2 = Pref.string ('2 ', cfg_mac, 'local mac (or ip)')
+-- pref.addr3 = Pref.string ('3 ', cfg_mac, 'local mac (or ip)')
+
+function pref_init()
+
+	pref.test = Pref.statictext('Local Mac or IP:', 'mac/ip')
+	for i = 1, 9 do
+		-- pref['addr'..i] = Pref.string (i, mac_arr[i], '')
+		pref['addr'..i] = Pref.string(i, '', '')
+	end
+
+	--- here got nil // .prefs_changed() called after run
+	-- for i = 1, 9 do
+	-- 	print(i, pref['addr'..i])
+	-- end
+
+end
+
+pref_init()
 
 -- local my_ip ='192.168.0.103'
 -- local my_ip ='172.20.1.222'
 -- local my_hw = '64:27:37:90:19:21'
-local my_hw2 = tostring(pref.my_mac)
+-- local my_hw2 = tostring(pref.my_mac)
+local my_hw2 = '64:27:37:90:19:21'
 local is_mac = my_hw2:sub(3,3) == ':'
 
-function ip_direction_proto.prefs_changed()
-	my_hw2 = tostring(pref.my_mac)
-	is_mac = my_hw2:sub(3,3) == ':'
-	save_conf(cfg, my_hw2)
+local map = {}
+
+function ip_direction_proto.prefs_changed(a)
+	-- my_hw2 = tostring(pref.my_mac)
+	-- is_mac = my_hw2:sub(3,3) == ':'
+	-- save_conf(cfg, my_hw2)
+	print('=== prefs_changed:', pref, a, arg) -- args nil
+
+	--- pref is userdata, can't iter
+	-- for k,v in pairs(pref) do
+	-- 	print(k, v)
+	-- end
+	map = {}
+	for i = 1, 9 do
+		local val = pref['addr'..i]
+		print(i, type(val), val~='', val)
+		if val~='' then
+			map[val]=true
+		end
+	end
+
 end
 
 print('ip_direction loaded: ', os.date('%F %T'))
@@ -177,12 +229,14 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 
 		if is_mac then
 			-- 使用 MAC 判断包 来源
-			if src_hw_str == my_hw2 then
+			-- if src_hw_str == my_hw2 then
+			if map[src_hw_str] then
 				local_flg = true
 			end
 		else
 			-- 使用 IP 判断包 来源
-			if src_addr_str == my_hw2 then
+			-- if src_addr_str == my_hw2 then
+			if map[src_addr_str] then
 				local_flg = true
 			end
 		end
