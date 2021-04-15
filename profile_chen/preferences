@@ -228,15 +228,15 @@ gui.column.format:
 	"Time", "%t",
 	"Source", "%s",
 	"Destination", "%d",
-	" local addr", "%Cus:ip.direction.local:0:R",
-	"direct", "%Cus:ip.direction.direct:0:R",
-	"remote addr", "%Cus:ip.direction.remote:0:R",
-	" local port", "%Cus:ip.direction.l_port:0:R",
-	"remote port", "%Cus:ip.direction.r_port:0:R",
+	" local addr", "%Cus:ip_direction.local:0:R",
+	"direct", "%Cus:ip_direction.direct:0:R",
+	"remote addr", "%Cus:ip_direction.remote:0:R",
+	" local port", "%Cus:ip_direction.l_port:0:R",
+	"remote port", "%Cus:ip_direction.r_port:0:R",
 	"Protocol", "%p",
 	"Length", "%L",
 	"dat.len", "%Cus:data.len:0:R",
-	"note", "%Cus:ip.direction.note:0:R",
+	"note", "%Cus:ip_direction.note:0:R",
 	"Info", "%i"
 
 ####### User Interface: Font ########
@@ -2477,7 +2477,7 @@ nameres.mac_name: FALSE
 
 # local mac (or ip)
 # A string
-#ip.direction.my_mac: 172.20.1.233
+#ip_direction.my_mac: 172.20.1.233
 
 # Whether the IPDC dissector should reassemble messages spanning multiple TCP segments. To use this option, you must also enable "Allow subdissectors to reassemble TCP streams" in the TCP protocol settings.
 # TRUE or FALSE (case-insensitive)

@@ -71,7 +71,7 @@ gui.geometry_main_lower_pane: 961
 
 # Packet list column pixel widths.
 # Each pair of strings consists of a column format and its pixel width.
-column.width: %m, 86, %t, 138, %s, 134, %d, 172, "%Cus:ip.direction.local", 127, "%Cus:ip.direction.direct", 57, "%Cus:ip.direction.remote", 157, "%Cus:ip.direction.l_port", 60, "%Cus:ip.direction.r_port", 65, %p, 57, %L, 57:C, "%Cus:data.len", 57:C, "%Cus:ip.direction.note", 177, %i, 763
+column.width: %m, 86, %t, 138, %s, 134, %d, 172, "%Cus:ip_direction.local", 127, "%Cus:ip_direction.direct", 57, "%Cus:ip_direction.remote", 157, "%Cus:ip_direction.l_port", 60, "%Cus:ip_direction.r_port", 65, %p, 57, %L, 57:C, "%Cus:data.len", 57:C, "%Cus:ip_direction.note", 177, %i, 763
 
 # Open conversation dialog tabs.
 # List of conversation names, e.g. "TCP", "IPv6".
