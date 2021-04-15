@@ -47,24 +47,6 @@ remote_hw_addr = ProtoField.string('ip_direction.remote_hw','remote hw')
 -- assign protoField to dissector 
 ip_direction_proto.fields = {local_addr, remote_addr, direct,  local_port, remote_port,  local_hw_addr, remote_hw_addr,  note}
 
--- Save/Load prefs
-function read_conf(fpath)
-	local f=io.open(fpath,'r')
-	local s=''
-	if f then
-		s=f:read()
-		f:close()
-	end
-	return s
-end
-function save_conf(fpath, text)
-	local f=io.open(fpath,'w')
-	if f then
-		f:write(text)
-		f:close()
-	end
-end
-
 function string:split(sep)
    local sep, fields = sep or ":", {}
    local pattern = string.format("([^%s]+)", sep)
@@ -75,7 +57,9 @@ function string:is_mac()
 	return self:sub(3,3) == ':'
 end
 
+print('ip_direction loaded: ', os.date('%F %T'))
 
+--- dir : ~/.config/wireshark/
 local cfg = Dir.personal_config_path('ip_dir_mac.txt')
 -- local cfg_mac = read_conf(cfg)
 print('cfg:', cfg)
@@ -90,10 +74,11 @@ local pref = ip_direction_proto.prefs
 
 -- pref.addr1 = Pref.string ('1 ', cfg_mac, 'local mac (or ip)')
 -- pref.addr2 = Pref.string ('2 ', cfg_mac, 'local mac (or ip)')
--- pref.addr3 = Pref.string ('3 ', cfg_mac, 'local mac (or ip)')
+
 
 function pref_init()
 
+	--- prefs save @ ~/.config/wireshark/profiles/chen/preferences
 	pref.test = Pref.statictext('Local Mac or IP:', 'mac/ip')
 	for i = 1, 9 do
 		-- pref['addr'..i] = Pref.string (i, mac_arr[i], '')
@@ -111,35 +96,28 @@ pref_init()
 
 -- local my_ip ='192.168.0.103'
 -- local my_ip ='172.20.1.222'
--- local my_hw = '64:27:37:90:19:21'
--- local my_hw2 = tostring(pref.my_mac)
-local my_hw2 = '64:27:37:90:19:21'
-local is_mac = my_hw2:sub(3,3) == ':'
+-- local my_hw2 = '64:27:37:90:19:21'
+-- local is_mac = my_hw2:sub(3,3) == ':'
 
 local map = {}
 
 function ip_direction_proto.prefs_changed(a)
 	-- my_hw2 = tostring(pref.my_mac)
-	-- is_mac = my_hw2:sub(3,3) == ':'
-	-- save_conf(cfg, my_hw2)
 	print('=== prefs_changed:', pref, a, arg) -- args nil
 
 	--- pref is userdata, can't iter
-	-- for k,v in pairs(pref) do
-	-- 	print(k, v)
-	-- end
 	map = {}
 	for i = 1, 9 do
 		local val = pref['addr'..i]
-		print(i, type(val), val~='', val)
-		if val~='' then
-			map[val]=true
+		-- print(i, type(val), val~='', val)
+		if val ~= '' then
+			print(i, val)
+			map[val] = true
 		end
 	end
+	print('')
 
 end
-
-print('ip_direction loaded: ', os.date('%F %T'))
 
 
 -- create a function to 'postdissect' each frame
@@ -165,6 +143,15 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 	end
 	--]]
 
+	-- obtain values from pinfo
+	---[[
+	local src_port_val = pinfo.src_port
+	local dst_port_val = pinfo.dst_port
+	local src_addr_value = pinfo.src
+	local dst_addr_value = pinfo.dst
+	--]]
+
+
 	-- detect frame cap: linux cooked OR normal ethernet
 	local cap_type_val = tostring(cap_type())
 	local d_offset = 0
@@ -176,14 +163,8 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 		return
 	end
 
-	-- obtain values from pinfo
-	---[[
-	local src_port_val = pinfo.src_port
-	local dst_port_val = pinfo.dst_port
-	local src_addr_value = pinfo.src
-	local dst_addr_value = pinfo.dst
-	--]]
 
+	--- proto probe
 	local note_value = ''
 	local ip_proto_val = tostring(ip_proto() or '')
 	-- if pinfo.cols.protocol == 'ICMP' then -- only show in display, lua get is const
@@ -229,13 +210,11 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 
 		if is_mac then
 			-- 使用 MAC 判断包 来源
-			-- if src_hw_str == my_hw2 then
 			if map[src_hw_str] then
 				local_flg = true
 			end
 		else
 			-- 使用 IP 判断包 来源
-			-- if src_addr_str == my_hw2 then
 			if map[src_addr_str] then
 				local_flg = true
 			end
