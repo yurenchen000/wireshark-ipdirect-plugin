@@ -7,7 +7,7 @@
 ------------------------------------------------
 
 
--- declare some Fields to be read
+-- declare fields to be read
 src_addr = Field.new('ip.src')
 dst_addr = Field.new('ip.dst')
 ip_proto = Field.new('ip.proto')
@@ -25,6 +25,7 @@ src_hw_addr = Field.new('eth.src')
 dst_hw_addr = Field.new('eth.dst')
 
 cap_type = Field.new('frame.encap_type')
+
 
 -- declare our (pseudo) protocol  // proto name should not contains '.'
 ip_direction_proto = Proto('ip_direction', 'TCP Direction Postdissector')
@@ -47,24 +48,13 @@ remote_hw_addr = ProtoField.string('ip_direction.remote_hw','remote hw')
 -- assign protoField to dissector 
 ip_direction_proto.fields = {local_addr, remote_addr, direct,  local_port, remote_port,  local_hw_addr, remote_hw_addr,  note}
 
-function string:split(sep)
-   local sep, fields = sep or ":", {}
-   local pattern = string.format("([^%s]+)", sep)
-   self:gsub(pattern, function(c) fields[#fields+1] = c end)
-   return fields
-end
-function string:is_mac()
-	return self:sub(3,3) == ':'
-end
-
 print('ip_direction loaded: ', os.date('%F %T'))
 
+
 --- dir : ~/.config/wireshark/
-local cfg = Dir.personal_config_path('ip_dir_mac.txt')
--- local cfg_mac = read_conf(cfg)
-print('cfg:', cfg)
--- mac_arr = cfg_mac:split('\r\n')
--- print('arr:', table.concat(mac_arr,' '))
+-- local cfg = Dir.personal_config_path('ip_dir_mac.txt')
+-- print('cfg:', cfg)
+
 
 -- Add prefs
 local pref = ip_direction_proto.prefs
@@ -91,18 +81,12 @@ function pref_init()
 	-- end
 
 end
-
 pref_init()
 
--- local my_ip ='192.168.0.103'
--- local my_ip ='172.20.1.222'
--- local my_hw2 = '64:27:37:90:19:21'
--- local is_mac = my_hw2:sub(3,3) == ':'
 
 local map = {}
 
 function ip_direction_proto.prefs_changed(a)
-	-- my_hw2 = tostring(pref.my_mac)
 	print('=== prefs_changed:', pref, a, arg) -- args nil
 
 	--- pref is userdata, can't iter
@@ -206,18 +190,15 @@ function ip_direction_proto.dissector(buffer, pinfo, tree)
 		local r_hw_addr
 		local l_hw_addr
 
-		-- recognize Local & Remote
+		--- recognize Local & Remote
 
-		if is_mac then
-			-- 使用 MAC 判断包 来源
-			if map[src_hw_str] then
-				local_flg = true
-			end
-		else
-			-- 使用 IP 判断包 来源
-			if map[src_addr_str] then
-				local_flg = true
-			end
+		-- 使用 MAC 判断包 来源
+		if map[src_hw_str] then
+			local_flg = true
+		end
+		-- 使用 IP 判断包 来源
+		if map[src_addr_str] then
+			local_flg = true
 		end
 
 		if not local_flg then
