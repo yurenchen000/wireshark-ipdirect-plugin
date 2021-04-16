@@ -69,7 +69,7 @@ local pref = ip_direction_proto.prefs
 function pref_init()
 
 	--- prefs save @ ~/.config/wireshark/profiles/chen/preferences
-	pref.test = Pref.statictext('Local Mac or IP:', 'mac/ip')
+	pref.test = Pref.statictext('Local MAC or IP:', 'mac/ip')
 	for i = 1, 9 do
 		-- pref['addr'..i] = Pref.string (i, mac_arr[i], '')
 		pref['addr'..i] = Pref.string(i, '', '')
